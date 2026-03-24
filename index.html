@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>레벨/경험치 계산기</title>
+    <title>커뮤니티 레벨/경험치 계산기</title>
     <style>
         body { font-family: 'Malgun Gothic', sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
         .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
@@ -25,7 +25,7 @@
 <div class="card">
     <h2>LV 계산기</h2>
     <div class="input-box">
-        <label>보유 경험치 입력</label>
+        <label>현재 경험치 입력</label>
         <input type="number" id="expInput" placeholder="숫자 입력" oninput="doCalc()">
     </div>
 
@@ -35,7 +35,7 @@
             <span class="val highlight" id="curLv">Lv. -</span>
         </div>
         <div class="res-item">
-            <span class="label">현재 보유 경험치(비율)</span>
+            <span class="label">현재 보유 경험치(%)</span>
             <span class="val" id="expRate">- / - (0%)</span>
         </div>
         <div class="res-item">
