@@ -5,14 +5,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>커뮤니티 레벨/경험치 계산기</title>
     <style>
-        body { font-family: 'Malgun Gothic', sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+        /* 배경 이미지 설정 부분 */
+        body { 
+            font-family: 'Malgun Gothic', sans-serif; 
+            background-image: url('back.png'); /* 이미지 파일명 */
+            background-size: cover;           /* 화면 꽉 채우기 */
+            background-position: center;      /* 가운데 정렬 */
+            background-attachment: fixed;     /* 스크롤해도 배경 고정 */
+            background-repeat: no-repeat;
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            margin: 0; 
+        }
+
+        /* 계산기 카드 스타일 (살짝 투명하게 해서 배경이 비치도록 수정) */
+        .card { 
+            background: rgba(255, 255, 255, 0.85); /* 85% 투명도 */
+            padding: 2rem; 
+            border-radius: 16px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15); 
+            width: 100%; 
+            max-width: 400px; 
+            backdrop-filter: blur(8px); /* 뒷배경을 살짝 흐리게 만드는 효과 */
+        }
+
         h2 { text-align: center; color: #1a73e8; margin-bottom: 1.5rem; }
         .input-box { margin-bottom: 1.5rem; }
         label { display: block; margin-bottom: 0.5rem; font-weight: bold; color: #444; }
         input { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 1rem; outline: none; }
         input:focus { border-color: #1a73e8; }
-        .results { margin-top: 1.5rem; background: #f8f9fa; border-radius: 8px; padding: 1rem; }
+        .results { margin-top: 1.5rem; background: rgba(248, 249, 250, 0.7); border-radius: 8px; padding: 1rem; }
         .res-item { display: flex; justify-content: space-between; margin-bottom: 0.8rem; border-bottom: 1px solid #eee; padding-bottom: 0.5rem; }
         .res-item:last-child { border: none; margin: 0; padding: 0; }
         .label { color: #666; font-size: 0.9rem; }
@@ -66,26 +90,21 @@
         if (input < 0) return;
 
         let curLv = 1;
-        let baseExp = 0; // 현재 레벨 시작점 (이전 레벨의 누적치)
-        let targetExp = table[0][1]; // 현재 레벨을 끝내기 위한 목표치
+        let baseExp = 0;
+        let targetExp = table[0][1];
 
-        // 1. 현재 레벨 찾기 (VLOOKUP 유사일치 방식)
-        // 입력값이 테이블의 누적경험치보다 크거나 같으면 그 레벨로 업데이트
         for (let i = 0; i < table.length; i++) {
             if (input >= table[i][1]) {
                 curLv = table[i][0];
                 baseExp = table[i][1];
-                // 다음 레벨이 있다면 목표치 설정
                 if (i + 1 < table.length) {
                     targetExp = table[i+1][1];
                 } else {
-                    targetExp = null; // 만렙
+                    targetExp = null;
                 }
             } else {
-                // 입력값이 테이블값보다 작으면, 이전 루프에서 결정된 curLv가 현재 레벨임
-                // 첫 번째 값(1레벨 30)보다 작을 경우 처리
                 if (i === 0) {
-                    curLv = 0; // 혹은 1레벨 미만 처리
+                    curLv = 0;
                     baseExp = 0;
                     targetExp = table[0][1];
                 }
@@ -93,15 +112,14 @@
             }
         }
 
-        // 2. 결과 출력
         if (targetExp === null) {
             document.getElementById('curLv').innerText = "Lv. " + curLv + " (Max)";
             document.getElementById('expRate').innerText = "최고 레벨 도달";
             document.getElementById('nextGoal').innerText = "-";
             document.getElementById('remExp').innerText = "0";
         } else {
-            const currentProgress = input - baseExp; // 현재 레벨에서 더 얻은 양
-            const levelTotalNeed = targetExp - baseExp; // 다음 레벨까지 가기 위해 필요한 양
+            const currentProgress = input - baseExp;
+            const levelTotalNeed = targetExp - baseExp;
             const remain = targetExp - input;
             const percent = ((currentProgress / levelTotalNeed) * 100).toFixed(1);
 
