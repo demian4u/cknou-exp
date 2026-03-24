@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>레벨/경험치 계산기</title>
+    <style>
+        body { font-family: 'Malgun Gothic', sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+        h2 { text-align: center; color: #1a73e8; margin-bottom: 1.5rem; }
+        .input-box { margin-bottom: 1.5rem; }
+        label { display: block; margin-bottom: 0.5rem; font-weight: bold; color: #444; }
+        input { width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 1rem; outline: none; }
+        input:focus { border-color: #1a73e8; }
+        .results { margin-top: 1.5rem; background: #f8f9fa; border-radius: 8px; padding: 1rem; }
+        .res-item { display: flex; justify-content: space-between; margin-bottom: 0.8rem; border-bottom: 1px solid #eee; padding-bottom: 0.5rem; }
+        .res-item:last-child { border: none; margin: 0; padding: 0; }
+        .label { color: #666; font-size: 0.9rem; }
+        .val { font-weight: bold; color: #222; }
+        .highlight { color: #d93025; font-size: 1.2em; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>LV 계산기</h2>
+    <div class="input-box">
+        <label>보유 경험치 입력</label>
+        <input type="number" id="expInput" placeholder="숫자 입력" oninput="doCalc()">
+    </div>
+
+    <div class="results">
+        <div class="res-item">
+            <span class="label">현재 레벨</span>
+            <span class="val highlight" id="curLv">Lv. -</span>
+        </div>
+        <div class="res-item">
+            <span class="label">현재 보유 경험치(비율)</span>
+            <span class="val" id="expRate">- / - (0%)</span>
+        </div>
+        <div class="res-item">
+            <span class="label">다음 레벨업 경험치</span>
+            <span class="val" id="nextGoal">-</span>
+        </div>
+        <div class="res-item">
+            <span class="label">레벨업까지 남은 경험치</span>
+            <span class="val" id="remExp">-</span>
+        </div>
+    </div>
+</div>
+
+<script>
+    const table = [
+        [1, 30], [2, 200], [3, 810], [4, 1440], [5, 2250], [6, 3240], [7, 4410], [8, 5760], [9, 7290], [10, 9000],
+        [11, 10890], [12, 12960], [13, 15210], [14, 17640], [15, 20250], [16, 23040], [17, 26010], [18, 29160], [19, 32490], [20, 36000],
+        [21, 39690], [22, 43560], [23, 47610], [24, 51840], [25, 56250], [26, 60840], [27, 65610], [28, 70560], [29, 75690], [30, 81000],
+        [31, 86490], [32, 92160], [33, 98010], [34, 104040], [35, 110250], [36, 116640], [37, 123210], [38, 129960], [39, 136890], [40, 144000],
+        [41, 151290], [42, 158760], [43, 166410], [44, 174240], [45, 182250], [46, 190440], [47, 198810], [48, 207360], [49, 216090], [50, 225000]
+    ];
+
+    function format(num) { return num.toLocaleString(); }
+
+    function doCalc() {
+        const input = parseInt(document.getElementById('expInput').value);
+        if (isNaN(input)) return;
+        if (input < 0) return;
+
+        let curLv = 1;
+        let baseExp = 0; // 현재 레벨 시작점 (이전 레벨의 누적치)
+        let targetExp = table[0][1]; // 현재 레벨을 끝내기 위한 목표치
+
+        // 1. 현재 레벨 찾기 (VLOOKUP 유사일치 방식)
+        // 입력값이 테이블의 누적경험치보다 크거나 같으면 그 레벨로 업데이트
+        for (let i = 0; i < table.length; i++) {
+            if (input >= table[i][1]) {
+                curLv = table[i][0];
+                baseExp = table[i][1];
+                // 다음 레벨이 있다면 목표치 설정
+                if (i + 1 < table.length) {
+                    targetExp = table[i+1][1];
+                } else {
+                    targetExp = null; // 만렙
+                }
+            } else {
+                // 입력값이 테이블값보다 작으면, 이전 루프에서 결정된 curLv가 현재 레벨임
+                // 첫 번째 값(1레벨 30)보다 작을 경우 처리
+                if (i === 0) {
+                    curLv = 0; // 혹은 1레벨 미만 처리
+                    baseExp = 0;
+                    targetExp = table[0][1];
+                }
+                break;
+            }
+        }
+
+        // 2. 결과 출력
+        if (targetExp === null) {
+            document.getElementById('curLv').innerText = "Lv. " + curLv + " (Max)";
+            document.getElementById('expRate').innerText = "최고 레벨 도달";
+            document.getElementById('nextGoal').innerText = "-";
+            document.getElementById('remExp').innerText = "0";
+        } else {
+            const currentProgress = input - baseExp; // 현재 레벨에서 더 얻은 양
+            const levelTotalNeed = targetExp - baseExp; // 다음 레벨까지 가기 위해 필요한 양
+            const remain = targetExp - input;
+            const percent = ((currentProgress / levelTotalNeed) * 100).toFixed(1);
+
+            document.getElementById('curLv').innerText = "Lv. " + curLv;
+            document.getElementById('expRate').innerText = format(currentProgress) + " / " + format(levelTotalNeed) + " (" + percent + "%)";
+            document.getElementById('nextGoal').innerText = format(targetExp);
+            document.getElementById('remExp').innerText = format(remain);
+        }
+    }
+</script>
+
+</body>
+</html>
