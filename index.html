@@ -228,7 +228,8 @@
         updateAllPetals();
 
         // 초기 생성 및 주기적 생성
-        for(let i=0; i<500; i++) {
+        countPetal = (Math.random() - 0.5) * 500 + 750;
+        for(let i=0; i<countPetal; i++) {
             setTimeout(createPetal, Math.random() * 3000);
         }
         setInterval(createPetal, 50);
