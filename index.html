@@ -3,21 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>커뮤니티 레벨/경험치 계산기</title>
+    <title>봄바람 타고.... (완전 동적 바람)</title>
     <style>
-        /* 배경 이미지 설정 부분 */
-        body { 
-            font-family: 'Malgun Gothic', sans-serif; 
-            background-image: url('back.png'); /* 이미지 파일명 */
-            background-size: cover;           /* 화면 꽉 채우기 */
-            background-position: center;      /* 가운데 정렬 */
-            background-attachment: fixed;     /* 스크롤해도 배경 고정 */
-            background-repeat: no-repeat;
-            display: flex; 
-            justify-content: center; 
-            align-items: center; 
-            min-height: 100vh; 
-            margin: 0; 
+        body {
+            margin: 0; padding: 0; width: 100vw; height: 100vh;
+            background-image: url('back.png'); 
+            background-size: cover; background-repeat: no-repeat; background-position: center; 
+            background-color: #e0f7fa;
+            overflow: hidden; display: flex; justify-content: center; align-items: center;
+            font-family: 'Malgun Gothic', sans-serif;
+        }
+
+        /* 꽃잎 기본 스타일 (애니메이션 제거) */
+        .petal {
+            position: absolute;
+            border-radius: 150px 10px 150px 10px;
+            pointer-events: none;
+            opacity: 0; /* 처음에 서서히 나타나기 위해 필요 */
+            transition: opacity 0.5s ease-in-out; /* 나타날 때 부드럽게 */
         }
 
         /* 계산기 카드 스타일 (살짝 투명하게 해서 배경이 비치도록 수정) */
@@ -45,8 +48,193 @@
     </style>
 </head>
 <body>
+<audio id="bgm" loop>
+    <source src="Glass_Bells_in_the_Orchard.mp3" type="audio/mpeg">
+    </audio>
 
-<div class="card">
+    <script>
+        const audio = document.getElementById('bgm');
+        const targetVolume = 0.2; // 1. 배경음악에 적절한 낮은 볼륨 (0.0 ~ 1.0)
+        const fadeDuration = 2000; // 2. 페이드 인/아웃 시간 (2초)
+
+        // 사용자가 화면을 클릭하면 부드럽게 시작
+        window.addEventListener('click', () => {
+            if (audio.paused) {
+                audio.volume = 0;
+                audio.play();
+                fadeIn(audio, targetVolume, fadeDuration);
+            }
+        }, { once: true });
+
+        // 부드럽게 소리 키우기 (Fade-in)
+        function fadeIn(elem, targetVol, duration) {
+            let currentVol = 0;
+            const interval = 50; 
+            const step = targetVol / (duration / interval);
+            
+            const timer = setInterval(() => {
+                currentVol += step;
+                if (currentVol >= targetVol) {
+                    elem.volume = targetVol;
+                    clearInterval(timer);
+                } else {
+                    elem.volume = currentVol;
+                }
+            }, interval);
+        }
+
+        // 3. 루프 시 매끄러운 연결을 위한 감시 시스템
+        // 음악이 끝나기 2초 전에 서서히 줄였다가 다시 시작할 때 키웁니다.
+        audio.addEventListener('timeupdate', function() {
+            const buffer = 2; // 끝날 때 2초 전부터 페이드 아웃
+            if (this.currentTime > this.duration - buffer) {
+                // 이 부분은 브라우저의 기본 loop 특성상 완벽한 크로스페이드는 어렵지만
+                // 볼륨을 미세하게 조절하여 충격을 완화합니다.
+                const remaining = this.duration - this.currentTime;
+                this.volume = (remaining / buffer) * targetVolume;
+            } else if (this.currentTime < buffer) {
+                // 다시 시작된 후 2초간 페이드 인
+                this.volume = (this.currentTime / buffer) * targetVolume;
+            } else {
+                this.volume = targetVolume;
+            }
+        });
+    </script>
+    <script>
+        // --- [자연스러운 바람 시스템 (기존 유지)] ---
+        let targetWind = 0;   
+        let currentWind = 0;  
+        const lerpFactor = 0.02; // 부드러움 계수
+
+        function setNextWindTarget() {
+            targetWind = (Math.random() * 10) - 5;
+            setTimeout(setNextWindTarget, Math.random() * 3000 + 4000);
+        }
+
+        function smoothWindUpdate() {
+            currentWind += (targetWind - currentWind) * lerpFactor;
+            requestAnimationFrame(smoothWindUpdate);
+        }
+
+        setNextWindTarget();
+        smoothWindUpdate();
+
+
+        // --- [완전 동적 꽃잎 애니메이션 시스템] ---
+        
+        // 1. 꽃잎 정보를 저장할 배열
+        const petals = [];
+
+        function createPetal() {
+            const petal = document.createElement('div');
+            petal.classList.add('petal');
+
+            // 랜덤 크기 및 색상 (기존 유지)
+            // const sizeNum = Math.random() * 10 + 10;
+            // petal.style.width = sizeNum + 'px';
+            // petal.style.height = sizeNum + 'px';
+            // const colors = ['#f44336', '#e91e63', '#d81b60', '#ad1457', '#c62828'];
+            // petal.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            // 랜덤 크기 (기존 유지)
+            const sizeNum = Math.random() * 10 + 5;
+            petal.style.width = sizeNum + 'px';
+            petal.style.height = sizeNum + 'px';
+
+            // --- [핵심 수정: 연한 분홍색 계열로 변경] ---
+            const colors = [
+                '#FFC0CB', // 핑크 (기본 연분홍)
+                '#FFB6C1', // 라이트 핑크 (약간 더 진함)
+                '#FFF0F5', // 라벤더 블러시 (아주 연한, 흰색에 가까운 핑크)
+                '#FFE4E1', // 미스티 로즈 (차분한 분홍)
+                '#FFDAB9'  // 피치 퍼프 (살구빛 도는 연분홍, 다양성 추가)
+            ];
+            petal.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+
+            // 초기 위치 및 고유 속성 설정
+            const startX = (Math.random() * 1.6 - 0.3) * window.innerWidth;
+            const startY = -sizeNum; // 화면 위쪽 바깥
+            
+            petal.style.left = startX + 'px';
+            petal.style.top = startY + 'px';
+
+            document.body.appendChild(petal);
+
+            // 나타나는 효과 (잠시 후 opacity를 0.8로)
+            setTimeout(() => { petal.style.opacity = '0.8'; }, 10);
+
+            // 2. 꽃잎 객체 생성 및 배열에 추가
+            const petalObj = {
+                element: petal,
+                x: startX,
+                y: startY,
+                size: sizeNum,
+                // 기본 낙하 속도 (약간의 랜덤성)
+                fallSpeed: (Math.random() * 2 + 1) + sizeNum / 8, 
+                // 회전 속도 (바람에 따라 변함)
+                rotateDeg: 0,
+                // 소멸 시작 타이밍 (0~2초 랜덤 지연)
+                fadeTime: Date.now() + (Math.random() * 2000), 
+                // 수명 (7~12초)
+                lifeTime: Date.now() + (Math.random() * 5000 + 7000),
+                removed: false // 중복 삭제 방지
+            };
+            
+            petals.push(petalObj);
+        }
+
+        // 3. 매 프레임마다 모든 꽃잎의 위치를 업데이트하는 메인 루프
+        function updateAllPetals() {
+            const now = Date.now();
+
+            for (let i = petals.length - 1; i >= 0; i--) {
+                const p = petals[i];
+                if (p.removed) continue;
+
+                // --- [핵심: 실시간 바람 반영] ---
+                
+                // A. X축 이동: 현재 바람(`currentWind`) 값을 직접 좌표에 더함
+                p.x += currentWind * (p.fallSpeed / 3) + (Math.random() - 0.5) * 1; 
+
+                // B. Y축 낙하: 기본 속도 유지
+                p.y += p.fallSpeed;
+
+                // C. 회전: 바람 세기에 비례하여 회전 속도 조절
+                p.rotateDeg += currentWind * 2;
+
+                // DOM 업데이트
+                p.element.style.transform = `translateX(${p.x - parseFloat(p.element.style.left)}px) translateY(${p.y - parseFloat(p.element.style.top)}px) rotate(${p.rotateDeg}deg)`;
+
+                // 4. 수명 관리 및 자연스런 소멸
+                if (p.y > window.innerHeight + p.size) { // 화면 아래로 나가면
+                    p.element.remove();
+                    p.removed = true;
+                    petals.splice(i, 1);
+                } else if (now > p.lifeTime) { // 수명이 다하면
+                    p.element.style.transition = 'opacity 1s ease';
+                    p.element.style.opacity = '0';
+                    setTimeout(() => {
+                        if (!p.removed) {
+                            p.element.remove();
+                            p.removed = true;
+                        }
+                    }, 1000);
+                }
+            }
+
+            requestAnimationFrame(updateAllPetals);
+        }
+
+        // 애니메이션 루프 시작
+        updateAllPetals();
+
+        // 초기 생성 및 주기적 생성
+        for(let i=0; i<500; i++) {
+            setTimeout(createPetal, Math.random() * 3000);
+        }
+        setInterval(createPetal, 50);
+    </script>
+
+    <div class="card">
     <h2>LV 계산기</h2>
     <div class="input-box">
         <label>현재 경험치 입력</label>
@@ -130,6 +318,5 @@
         }
     }
 </script>
-
 </body>
 </html>
